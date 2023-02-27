@@ -1,9 +1,8 @@
 ﻿using System.Text.Json;
 using System.Net.Http;
 using System.Windows.Forms;
-using System.Security.Policy;
-using System.Text.Json.Nodes;
 using System.Text;
+using System.Net;
 
 namespace SendPCImfo.App
 {
@@ -11,9 +10,13 @@ namespace SendPCImfo.App
     {
         static void Main(string[] args)
         {
+            ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+        
             PCInfo _PCInfo = null;
-            string jsonRequest = "";
-            string url = "http://localhost:4200/api/_pcInf/Post";
+            string jsonObject = "";
+            string url = "https://localhost:7032/api/_pcInf/Post";
 
             try
             {
@@ -25,17 +28,21 @@ namespace SendPCImfo.App
                 return;
             }
 
-            jsonRequest = JsonSerializer.Serialize(_PCInfo);
-            ////Console.WriteLine(jsonRequest);
-            ////Console.ReadLine();
+            jsonObject = JsonSerializer.Serialize(_PCInfo);
 
-            HttpClient client = new HttpClient();
+            HttpClient httpClient = new HttpClient();
 
-            //var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
-            //var result = client.PostAsync(url, content).Result;
-
-            MessageBox.Show("Данные отправлены на сервер");
-
+            try
+            {
+                var response = httpClient.PostAsJsonAsync(url, _PCInfo);
+                MessageBox.Show("Данные успешно отправленны в хранилище на сервер!");
+                MessageBox.Show("Произошла ошибка при отправке данных !");
+                return;
+            }
+            catch (System.Exception)
+            {
+                MessageBox.Show("Произошла ошибка при отправке данных !");
+            }
         }
         
     }
